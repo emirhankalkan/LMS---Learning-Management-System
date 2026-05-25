@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
 using System.Web;
 using System.Web.UI;
@@ -23,9 +24,13 @@ namespace EduFlow.Instructor
 
         private readonly InstructorDAL _dal       = new InstructorDAL();
         private readonly CourseDAL     _courseDal = new CourseDAL();
+        private static readonly HashSet<string> AllowedVideoExtensions =
+            new HashSet<string>(StringComparer.OrdinalIgnoreCase) { ".mp4", ".webm", ".mov" };
+        private const int MaxVideoUploadBytes = 200 * 1024 * 1024;
 
         protected void Page_Load(object sender, EventArgs e)
         {
+            Form.Enctype = "multipart/form-data";
             try { Categories = _courseDal.GetAllCategories(); } catch { }
 
             if (!IsPostBack) return;
@@ -82,7 +87,7 @@ namespace EduFlow.Instructor
             int.TryParse(Request.Form["newCourseId"],   out var courseId);
             int.TryParse(Request.Form["lessonDuration"], out var duration);
             string title   = (Request.Form["lessonTitle"]   ?? "").Trim();
-            string video   = (Request.Form["lessonVideo"]   ?? "").Trim();
+            string video   = NormalizeVideoUrl((Request.Form["lessonVideo"] ?? "").Trim());
             bool isPreview = (Request.Form["lessonPreview"] ?? "false") == "true";
 
             NewCourseId = courseId;
@@ -97,6 +102,10 @@ namespace EduFlow.Instructor
 
             try
             {
+                var uploadedVideo = SaveUploadedVideo();
+                if (!string.IsNullOrEmpty(uploadedVideo))
+                    video = uploadedVideo;
+
                 _dal.AddLesson(courseId, title, video, duration, isPreview);
                 SuccessMsg = "Ders eklendi!";
             }
@@ -118,12 +127,13 @@ namespace EduFlow.Instructor
                 foreach (var l in lessons)
                 {
                     var title = E(l.Title);
+                    var videoBadge = BuildVideoBadge(l.VideoUrl);
                     string preview = l.IsPreview
                         ? "<span class=\"badge-free\" style=\"font-size:11px;\"><i class=\"bi bi-eye\"></i> Önizleme</span>"
                         : "<span class=\"text-muted\" style=\"font-size:12px;\">—</span>";
 
-                    sb.AppendFormat("<tr><td style=\"padding:10px 16px;\">{0}</td><td>{1}</td><td>{2} dk</td><td>{3}</td></tr>",
-                        l.OrderIndex, title, l.Duration, preview);
+                    sb.AppendFormat("<tr><td style=\"padding:10px 16px;\">{0}</td><td>{1}<div style=\"margin-top:4px;\">{4}</div></td><td>{2} dk</td><td>{3}</td></tr>",
+                        l.OrderIndex, title, l.Duration, preview, videoBadge);
                 }
                 LessonsHtml = sb.ToString();
             }
@@ -132,5 +142,69 @@ namespace EduFlow.Instructor
 
         private static string E(string value)
             => HttpUtility.HtmlEncode(value ?? string.Empty);
+
+        private string SaveUploadedVideo()
+        {
+            var file = Request.Files["lessonVideoFile"];
+            if (file == null || file.ContentLength == 0)
+                return null;
+
+            if (file.ContentLength > MaxVideoUploadBytes)
+                throw new InvalidOperationException("Video dosyası en fazla 200 MB olabilir.");
+
+            var extension = Path.GetExtension(file.FileName);
+            if (string.IsNullOrEmpty(extension) || !AllowedVideoExtensions.Contains(extension))
+                throw new InvalidOperationException("Sadece MP4, WebM veya MOV video dosyası yükleyebilirsiniz.");
+
+            var uploadDirectory = Server.MapPath("~/Uploads/Lessons");
+            Directory.CreateDirectory(uploadDirectory);
+
+            var fileName = DateTime.UtcNow.ToString("yyyyMMddHHmmss") + "-" + Guid.NewGuid().ToString("N").Substring(0, 8) + extension.ToLowerInvariant();
+            file.SaveAs(Path.Combine(uploadDirectory, fileName));
+
+            return "/Uploads/Lessons/" + fileName;
+        }
+
+        private static string NormalizeVideoUrl(string url)
+        {
+            if (string.IsNullOrWhiteSpace(url))
+                return "";
+
+            if (url.IndexOf("youtube.com/watch", StringComparison.OrdinalIgnoreCase) >= 0)
+            {
+                var uri = new Uri(url);
+                var query = HttpUtility.ParseQueryString(uri.Query);
+                var videoId = query["v"];
+                var listId = query["list"];
+                if (!string.IsNullOrEmpty(videoId))
+                {
+                    var embed = "https://www.youtube.com/embed/" + HttpUtility.UrlEncode(videoId);
+                    if (!string.IsNullOrEmpty(listId))
+                        embed += "?list=" + HttpUtility.UrlEncode(listId);
+                    return embed;
+                }
+            }
+
+            if (url.IndexOf("youtu.be/", StringComparison.OrdinalIgnoreCase) >= 0)
+            {
+                var uri = new Uri(url);
+                var videoId = uri.AbsolutePath.Trim('/');
+                if (!string.IsNullOrEmpty(videoId))
+                    return "https://www.youtube.com/embed/" + HttpUtility.UrlEncode(videoId);
+            }
+
+            return url;
+        }
+
+        private static string BuildVideoBadge(string videoUrl)
+        {
+            if (string.IsNullOrEmpty(videoUrl))
+                return "<span class=\"text-muted\" style=\"font-size:12px;\">Video eklenmedi</span>";
+
+            if (videoUrl.StartsWith("/Uploads/", StringComparison.OrdinalIgnoreCase))
+                return "<span class=\"badge-level\" style=\"font-size:11px;\"><i class=\"bi bi-upload\"></i> Yüklü video</span>";
+
+            return "<span class=\"badge-level\" style=\"font-size:11px;\"><i class=\"bi bi-youtube\"></i> Harici video</span>";
+        }
     }
 }

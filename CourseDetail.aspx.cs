@@ -16,6 +16,7 @@ namespace EduFlow
         protected string StarsHtml     { get; private set; }
         protected string WillLearnHtml { get; private set; }
         protected string PreviewVideoUrl { get; private set; }
+        protected bool HasPreviewVideo { get; private set; }
 
         private readonly CourseDAL _dal = new CourseDAL();
 
@@ -61,6 +62,7 @@ namespace EduFlow
             }
 
             if (Course != null) Title = Course.Title;
+            HasPreviewVideo = !string.IsNullOrEmpty(PreviewVideoUrl) && PreviewVideoUrl != "about:blank";
             StarsHtml     = Course != null ? BuildStars(Course.AverageRating) : "";
             WillLearnHtml = BuildWillLearn();
         }
@@ -73,7 +75,7 @@ namespace EduFlow
                     return lesson.VideoUrl;
             }
 
-            return "https://www.youtube.com/embed/oev5wH-_XCI?list=PLKnjBHu2xXNPmFMvGKVHA_ijjrgUyNIXr";
+            return "about:blank";
         }
 
         private static string BuildLessons(IEnumerable<Lesson> lessons)

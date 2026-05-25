@@ -123,7 +123,7 @@
                     <div class="buy-box">
                         <!-- Video Preview -->
                         <div class="ratio ratio-16x9 mb-3" style="border-radius:var(--radius-md);overflow:hidden;">
-                            <iframe src="<%: PreviewVideoUrl %>" title="Kurs önizleme" allowfullscreen></iframe>
+                            <iframe src="https://www.youtube.com/embed/oev5wH-_XCI?list=PLKnjBHu2xXNPmFMvGKVHA_ijjrgUyNIXr" title="Kurs önizleme" allowfullscreen></iframe>
                         </div>
                         <p class="text-muted mb-3" style="font-size:13px;text-align:center;"><i class="bi bi-eye"></i> Ücretsiz önizleme</p>
 

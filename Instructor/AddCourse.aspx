@@ -130,8 +130,18 @@
         </select>
       </div>
       <div class="col-12">
-        <label class="form-label">Video URL <small class="text-muted">(YouTube, Vimeo vb.)</small></label>
-        <input class="form-control" id="lessonVideo" name="lessonVideo" type="url" placeholder="https://youtube.com/..." />
+        <label class="form-label">Video Kaynağı</label>
+        <div style="display:grid;gap:10px;">
+          <input class="form-control" id="lessonVideo" name="lessonVideo" type="url"
+                 placeholder="YouTube/Vimeo linki: https://www.youtube.com/watch?v=..." />
+          <div style="display:flex;align-items:center;gap:10px;color:var(--color-text-muted);font-size:12px;">
+            <span style="height:1px;background:var(--color-border);flex:1;"></span>
+            <span>veya</span>
+            <span style="height:1px;background:var(--color-border);flex:1;"></span>
+          </div>
+          <input class="form-control" id="lessonVideoFile" name="lessonVideoFile" type="file" accept="video/mp4,video/webm,video/quicktime" />
+          <small class="text-muted">MP4, WebM veya MOV yükleyebilirsiniz. Link girerseniz dosya yüklemeniz gerekmez.</small>
+        </div>
       </div>
     </div>
     <input type="hidden" name="newCourseId" value="<%= NewCourseId %>" />

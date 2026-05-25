@@ -24,3 +24,6 @@ packages/
 ## Temporary files
 *.tmp
 *.log
+
+## Local Project Specifications
+eduflow-proje-plani.md

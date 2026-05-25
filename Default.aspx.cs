@@ -1,0 +1,137 @@
+using System;
+using System.Collections.Generic;
+using System.Text;
+using System.Web;
+using System.Web.UI;
+using EduFlow.DAL;
+using EduFlow.Models;
+
+namespace EduFlow
+{
+    public partial class _Default : Page
+    {
+        protected string FeaturedCoursesHtml { get; private set; }
+        protected string FreeCoursesHtml     { get; private set; }
+        protected string CategoryCardsHtml   { get; private set; }
+
+        private readonly CourseDAL _dal = new CourseDAL();
+
+        protected void Page_Load(object sender, EventArgs e)
+        {
+            try
+            {
+                FeaturedCoursesHtml = BuildCourseCards(_dal.GetFeaturedCourses());
+                FreeCoursesHtml     = BuildCourseCards(_dal.GetFreeCourses());
+                CategoryCardsHtml   = BuildCategoryCards(_dal.GetAllCategories());
+            }
+            catch (Exception ex)
+            {
+                // DB bağlantısı yoksa SampleData ile fallback
+                FeaturedCoursesHtml = BuildCourseCards(Services.SampleData.GetFeaturedCourses());
+                FreeCoursesHtml     = BuildCourseCards(Services.SampleData.Courses.FindAll(c => c.IsFree));
+                CategoryCardsHtml   = BuildCategoryCardsFallback();
+                System.Diagnostics.Debug.WriteLine("DB hatası, SampleData kullanılıyor: " + ex.Message);
+            }
+        }
+
+        private static string BuildCourseCards(List<Course> courses)
+        {
+            var sb = new StringBuilder();
+            foreach (var c in courses)
+            {
+                var thumb = A(c.ThumbnailUrl);
+                var title = E(c.Title);
+                var level = E(c.Level);
+                var category = E(c.CategoryName);
+                var instructor = E(c.InstructorName);
+                string stars      = BuildStars(c.AverageRating);
+                string priceBadge = c.IsFree ? "<span class=\"badge-free\">Ücretsiz</span>"
+                                  : (c.IsFeatured ? "<span class=\"badge-featured\">Öne Çıkan</span>" : "");
+                string price      = c.IsFree ? "<span class=\"course-price free\">Ücretsiz</span>"
+                                  : $"<span class=\"course-price\">₺{c.Price:N0}</span>";
+
+                sb.AppendFormat(@"
+<div class=""col-md-6 col-lg-4"">
+  <article class=""course-card"">
+    <div class=""card-thumb"">
+      <img src=""{0}"" alt=""{1}"" loading=""lazy"" />
+      <div class=""card-badges"">{2}<span class=""badge-level"">{3}</span></div>
+    </div>
+    <div class=""card-body"">
+      <p class=""course-meta mb-1"">{4} &bull; {5} &bull; {6} ders &bull; {7}s</p>
+      <h3 class=""course-title"">{1}</h3>
+      <div class=""course-rating"">
+        {8}
+        <span style=""color:var(--color-accent);font-weight:500;font-size:13px;margin-left:4px"">{9:F1}</span>
+        <span class=""rating-count"">({10:N0})</span>
+      </div>
+      <div class=""course-card-footer"">
+        {11}
+        <a class=""btn btn-primary-custom btn-sm"" href=""CourseDetail.aspx?id={12}"">İncele</a>
+      </div>
+    </div>
+  </article>
+</div>",
+                    thumb, title, priceBadge, level,
+                    category, instructor, c.LessonCount, c.TotalHours,
+                    stars, c.AverageRating, c.EnrollmentCount, price, c.CourseId);
+            }
+            return sb.ToString();
+        }
+
+        private static string BuildCategoryCards(List<Category> categories)
+        {
+            var sb = new StringBuilder();
+            foreach (var cat in categories)
+                sb.AppendFormat(@"
+<div class=""col-6 col-lg-4"">
+  <a class=""category-card"" href=""Courses.aspx?category={0}"">
+    <span class=""category-icon""><i class=""bi {1}""></i></span>
+    <div class=""cat-info"">
+      <span class=""cat-name"">{2}</span>
+      <span class=""cat-count"">{3} kurs</span>
+    </div>
+  </a>
+</div>", cat.CategoryId, A(cat.IconClass), E(cat.Name), cat.CourseCount);
+            return sb.ToString();
+        }
+
+        private static string BuildCategoryCardsFallback()
+        {
+            var sb = new StringBuilder();
+            foreach (var cat in Services.SampleData.Categories)
+            {
+                int count = Services.SampleData.Courses.FindAll(c => c.CategoryId == cat.CategoryId).Count;
+                sb.AppendFormat(@"
+<div class=""col-6 col-lg-4"">
+  <a class=""category-card"" href=""Courses.aspx?category={0}"">
+    <span class=""category-icon""><i class=""bi {1}""></i></span>
+    <div class=""cat-info"">
+      <span class=""cat-name"">{2}</span>
+      <span class=""cat-count"">{3} kurs</span>
+    </div>
+  </a>
+</div>", cat.CategoryId, A(cat.IconClass), E(cat.Name), count);
+            }
+            return sb.ToString();
+        }
+
+        private static string BuildStars(double rating)
+        {
+            var sb   = new StringBuilder();
+            int full = (int)Math.Floor(rating);
+            bool half = (rating - full) >= 0.5;
+            for (int i = 0; i < full; i++) sb.Append("<i class=\"bi bi-star-fill\" style=\"color:var(--color-accent)\"></i>");
+            if (half) sb.Append("<i class=\"bi bi-star-half\" style=\"color:var(--color-accent)\"></i>");
+            int empty = 5 - full - (half ? 1 : 0);
+            for (int i = 0; i < empty; i++) sb.Append("<i class=\"bi bi-star\" style=\"color:#D0D7E0\"></i>");
+            return sb.ToString();
+        }
+
+        private static string E(string value)
+            => HttpUtility.HtmlEncode(value ?? string.Empty);
+
+        private static string A(string value)
+            => HttpUtility.HtmlAttributeEncode(value ?? string.Empty);
+    }
+}

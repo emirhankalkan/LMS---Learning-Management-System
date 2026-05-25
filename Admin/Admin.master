@@ -1,0 +1,62 @@
+<%@ Master Language="C#" AutoEventWireup="true" CodeBehind="Admin.master.cs" Inherits="EduFlow.Admin.AdminMaster" %>
+<!DOCTYPE html>
+<html lang="tr">
+<head runat="server">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title><%: Page.Title %> — EduFlow Yönetim</title>
+    <link href="../Content/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
+    <link href="../Content/Site.css" rel="stylesheet" />
+</head>
+<body>
+    <form runat="server">
+        <asp:ScriptManager runat="server" />
+        <div class="admin-shell">
+            <!-- Sidebar -->
+            <aside class="admin-sidebar">
+                <div class="brand">
+                    <i class="bi bi-mortarboard-fill"></i> EduFlow
+                </div>
+                <nav>
+                    <div class="sidebar-section-label">Ana</div>
+                    <a href="Dashboard.aspx"><i class="bi bi-speedometer2"></i> Dashboard</a>
+                    <div class="sidebar-section-label">İçerik</div>
+                    <a href="Courses.aspx"><i class="bi bi-collection-play"></i> Kurslar</a>
+                    <a href="Comments.aspx"><i class="bi bi-chat-square-text"></i> Yorumlar</a>
+                    <a href="Ads.aspx"><i class="bi bi-badge-ad"></i> Reklamlar</a>
+                    <div class="sidebar-section-label">Kullanıcılar</div>
+                    <a href="Users.aspx"><i class="bi bi-people"></i> Tüm Kullanıcılar</a>
+                    <div class="sidebar-section-label">Sistem</div>
+                    <a href="../Default.aspx"><i class="bi bi-house"></i> Siteye Dön</a>
+                    <a href="../Logout.aspx"><i class="bi bi-box-arrow-right"></i> Çıkış</a>
+                </nav>
+            </aside>
+
+            <!-- Main Area -->
+            <main class="admin-main">
+                <!-- Top Bar -->
+                <div class="admin-topbar">
+                    <h1><%: Page.Title %></h1>
+                    <div class="admin-user">
+                        <i class="bi bi-person-circle" style="font-size:20px;color:var(--color-primary)"></i>
+                        <span>Admin Kullanıcı</span>
+                        <a href="../Logout.aspx" class="btn btn-outline-custom btn-sm">Çıkış</a>
+                    </div>
+                </div>
+                <asp:ContentPlaceHolder ID="AdminContent" runat="server" />
+            </main>
+        </div>
+    </form>
+    <script src="../Scripts/bootstrap.bundle.min.js"></script>
+    <script>
+        // Aktif menü linkini vurgula
+        (function(){
+            var path = window.location.pathname.split('/').pop();
+            document.querySelectorAll('.admin-sidebar a').forEach(function(a){
+                if(a.getAttribute('href') === path) a.classList.add('active');
+            });
+        })();
+    </script>
+</body>
+</html>

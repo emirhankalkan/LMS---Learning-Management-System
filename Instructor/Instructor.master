@@ -1,0 +1,77 @@
+<%@ Master Language="C#" AutoEventWireup="true" CodeBehind="Instructor.master.cs" Inherits="EduFlow.Instructor.InstructorMaster" %>
+<!DOCTYPE html>
+<html lang="tr">
+<head runat="server">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title><%: Page.Title %> — EduFlow Eğitmen Paneli</title>
+  <link href="../Content/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
+  <link href="../Content/Site.css" rel="stylesheet" />
+  <style>
+    /* Eğitmen paneli renk tonu — yeşil/teal accent */
+    .instructor-sidebar { background: linear-gradient(160deg, #0f2027, #203a43, #2c5364); }
+    .instructor-sidebar .brand { color:#5DF0C1; border-bottom-color:rgba(93,240,193,.15); }
+    .instructor-sidebar nav a { color:rgba(255,255,255,.72); }
+    .instructor-sidebar nav a:hover,
+    .instructor-sidebar nav a.active { background:rgba(93,240,193,.13); color:#5DF0C1; }
+    .instructor-sidebar .sidebar-section-label { color:rgba(93,240,193,.45); }
+    .instructor-topbar { border-bottom-color:rgba(93,240,193,.12); }
+    .instructor-topbar h1 { color:var(--color-text); }
+    .stat-card-ins { background:var(--color-surface); border:1px solid var(--color-border); border-radius:14px; padding:22px 20px; }
+    .stat-icon-ins { width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px; }
+  </style>
+</head>
+<body>
+<form runat="server">
+  <asp:ScriptManager runat="server" />
+  <div class="admin-shell">
+
+    <!-- Sidebar -->
+    <aside class="admin-sidebar instructor-sidebar">
+      <div class="brand">
+        <i class="bi bi-person-video3"></i> EduFlow
+        <div style="font-size:11px;font-weight:400;color:rgba(93,240,193,.5);margin-top:2px;">Eğitmen Paneli</div>
+      </div>
+      <nav>
+        <div class="sidebar-section-label">Genel</div>
+        <a href="Dashboard.aspx"><i class="bi bi-speedometer2"></i> Dashboard</a>
+
+        <div class="sidebar-section-label">Kurslarım</div>
+        <a href="MyCourses.aspx"><i class="bi bi-collection-play"></i> Kurs Listesi</a>
+        <a href="AddCourse.aspx"><i class="bi bi-plus-circle"></i> Yeni Kurs Ekle</a>
+
+        <div class="sidebar-section-label">Öğrenciler</div>
+        <a href="Students.aspx"><i class="bi bi-people"></i> Öğrencilerim</a>
+
+        <div class="sidebar-section-label">Hesap</div>
+        <a href="../Default.aspx"><i class="bi bi-house"></i> Siteye Dön</a>
+        <a href="../Logout.aspx"><i class="bi bi-box-arrow-right"></i> Çıkış</a>
+      </nav>
+    </aside>
+
+    <!-- Main -->
+    <main class="admin-main">
+      <div class="admin-topbar instructor-topbar">
+        <h1><%: Page.Title %></h1>
+        <div class="admin-user">
+          <i class="bi bi-person-video3" style="font-size:20px;color:#5DF0C1;"></i>
+          <span><%: Session["FullName"] ?? "Eğitmen" %></span>
+          <a href="../Logout.aspx" class="btn btn-outline-custom btn-sm">Çıkış</a>
+        </div>
+      </div>
+      <asp:ContentPlaceHolder ID="InstructorContent" runat="server" />
+    </main>
+  </div>
+</form>
+<script src="../Scripts/bootstrap.bundle.min.js"></script>
+<script>
+  (function(){
+    var path = window.location.pathname.split('/').pop();
+    document.querySelectorAll('.instructor-sidebar a').forEach(function(a){
+      if(a.getAttribute('href') === path) a.classList.add('active');
+    });
+  })();
+</script>
+</body>
+</html>

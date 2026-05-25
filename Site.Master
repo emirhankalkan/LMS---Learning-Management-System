@@ -1,0 +1,147 @@
+<%@ Master Language="C#" AutoEventWireup="true" CodeBehind="Site.master.cs" Inherits="EduFlow.SiteMaster" %>
+<!DOCTYPE html>
+<html lang="tr">
+<head runat="server">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="EduFlow - Yazılım, tasarım, veri ve iş becerilerini geliştirmek için online kurs platformu." />
+    <title><%: Page.Title %> - EduFlow</title>
+    <webopt:bundlereference runat="server" path="~/Content/css" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
+    <link href="~/Content/Site.css" rel="stylesheet" />
+    <asp:ContentPlaceHolder ID="HeadContent" runat="server" />
+</head>
+<body>
+    <form runat="server">
+        <asp:ScriptManager runat="server">
+            <Scripts>
+                <asp:ScriptReference Name="MsAjaxBundle" />
+                <asp:ScriptReference Name="jquery" />
+                <asp:ScriptReference Name="WebForms.js" Assembly="System.Web" Path="~/Scripts/WebForms/WebForms.js" />
+                <asp:ScriptReference Name="WebUIValidation.js" Assembly="System.Web" Path="~/Scripts/WebForms/WebUIValidation.js" />
+                <asp:ScriptReference Name="WebFormsBundle" />
+            </Scripts>
+        </asp:ScriptManager>
+
+        <nav class="navbar navbar-expand-lg navbar-eduflow">
+            <div class="container">
+                <a class="navbar-brand" runat="server" href="~/Default.aspx">
+                    <i class="bi bi-mortarboard-fill"></i> EduFlow
+                </a>
+                <button type="button" class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#mainNavbar" aria-controls="mainNavbar" aria-expanded="false" aria-label="Menüyü aç">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div id="mainNavbar" class="collapse navbar-collapse">
+                    <ul class="navbar-nav me-3">
+                        <li class="nav-item"><a class="nav-link" runat="server" href="~/Default.aspx">Ana Sayfa</a></li>
+                        <li class="nav-item"><a class="nav-link" runat="server" href="~/Courses.aspx">Kurslar</a></li>
+                        <% if (Session["UserId"] != null) { %>
+                        <% if (Session["UserRole"]?.ToString() == "Instructor") { %>
+                        <li class="nav-item"><a class="nav-link" runat="server" href="~/Instructor/Dashboard.aspx"><i class="bi bi-person-video3"></i> Eğitmen Paneli</a></li>
+                        <% } else if (Session["UserRole"]?.ToString() == "Admin") { %>
+                        <li class="nav-item"><a class="nav-link" runat="server" href="~/Admin/Dashboard.aspx"><i class="bi bi-shield-check"></i> Yönetim Paneli</a></li>
+                        <% } else { %>
+                        <li class="nav-item"><a class="nav-link" runat="server" href="~/Dashboard.aspx"><i class="bi bi-grid"></i> Panelim</a></li>
+                        <li class="nav-item"><a class="nav-link" runat="server" href="~/Favorites.aspx"><i class="bi bi-heart"></i> Favoriler</a></li>
+                        <% } %>
+                        <% } %>
+
+                    </ul>
+                    <div class="nav-search me-3">
+                        <input type="search" placeholder="Kurs, konu veya eğitmen ara..." id="navSearchInput" autocomplete="off" />
+                        <i class="bi bi-search"></i>
+                    </div>
+                    <div class="d-flex align-items-center gap-2 ms-auto">
+                        <% if (Session["UserId"] == null) { %>
+                            <a class="nav-link px-2" runat="server" href="~/Login.aspx">Giriş Yap</a>
+                            <a class="btn btn-accent btn-sm" runat="server" href="~/Register.aspx">Ücretsiz Başla</a>
+                        <% } else { %>
+                            <a class="nav-link px-2" runat="server" href="~/Cart.aspx" title="Sepetim"><i class="bi bi-cart3" style="font-size:18px;color:var(--color-on-primary-muted)"></i></a>
+                            <a class="nav-link px-2" runat="server" href="~/Profile.aspx" style="display:flex;align-items:center;gap:6px;">
+                                <span style="width:32px;height:32px;border-radius:50%;background:var(--color-accent);color:var(--color-accent-dark);display:flex;align-items:center;justify-content:center;font-weight:500;font-size:14px;">
+                                    <%: (Session["FullName"]?.ToString() ?? "?").Substring(0,1).ToUpper() %>
+                                </span>
+                                <span style="color:var(--color-on-primary-muted);font-size:14px;"><%: Session["FullName"] %></span>
+                            </a>
+                            <a class="btn btn-outline-light btn-sm" runat="server" href="~/Logout.aspx">Çıkış</a>
+                        <% } %>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <main>
+            <asp:ContentPlaceHolder ID="MainContent" runat="server" />
+        </main>
+
+        <footer class="site-footer">
+            <div class="container">
+                <div class="row g-4">
+                    <div class="col-lg-4">
+                        <h3><i class="bi bi-mortarboard-fill"></i> EduFlow</h3>
+                        <p>Yazılım, tasarım, veri bilimi ve iş becerilerini geliştirmek isteyenler için seçilmiş kursları sade ve güvenli bir deneyimle sunan Türkçe online öğrenme platformu.</p>
+                        <div class="footer-contact">
+                            <span><i class="bi bi-envelope"></i> destek@eduflow.test</span>
+                            <span><i class="bi bi-telephone"></i> +90 212 000 00 00</span>
+                            <span><i class="bi bi-geo-alt"></i> İstanbul, Türkiye</span>
+                        </div>
+                        <div class="footer-social">
+                            <a href="#" aria-label="Twitter"><i class="bi bi-twitter-x"></i></a>
+                            <a href="#" aria-label="LinkedIn"><i class="bi bi-linkedin"></i></a>
+                            <a href="#" aria-label="YouTube"><i class="bi bi-youtube"></i></a>
+                            <a href="#" aria-label="Instagram"><i class="bi bi-instagram"></i></a>
+                        </div>
+                    </div>
+                    <div class="col-6 col-lg-2">
+                        <h4>Platform</h4>
+                        <a runat="server" href="~/Courses.aspx">Kurs Kataloğu</a>
+                        <a runat="server" href="~/Dashboard.aspx">Öğrenci Paneli</a>
+                        <a runat="server" href="~/Favorites.aspx">Favorilerim</a>
+                        <a runat="server" href="~/Cart.aspx">Sepetim</a>
+                        <a runat="server" href="~/OrderHistory.aspx">Siparişlerim</a>
+                    </div>
+                    <div class="col-6 col-lg-2">
+                        <h4>Kategoriler</h4>
+                        <a runat="server" href="~/Courses.aspx?category=1">Yazılım</a>
+                        <a runat="server" href="~/Courses.aspx?category=2">Tasarım</a>
+                        <a runat="server" href="~/Courses.aspx?category=3">Veri & AI</a>
+                        <a runat="server" href="~/Courses.aspx?category=4">İşletme</a>
+                        <a runat="server" href="~/Courses.aspx?category=6">Pazarlama</a>
+                    </div>
+                    <div class="col-6 col-lg-2">
+                        <h4>Destek</h4>
+                        <a href="#">Yardım Merkezi</a>
+                        <a href="#">Sık Sorulan Sorular</a>
+                        <a href="#">İletişim</a>
+                        <a href="#">Eğitmen Başvurusu</a>
+                    </div>
+                    <div class="col-6 col-lg-2">
+                        <h4>Yasal</h4>
+                        <a href="#">Gizlilik Politikası</a>
+                        <a href="#">Kullanım Koşulları</a>
+                        <a href="#">KVKK Metni</a>
+                        <a href="#">Çerez Politikası</a>
+                    </div>
+                </div>
+                <div class="footer-bottom">
+                    <span>&copy; <%: DateTime.Now.Year %> EduFlow. Tüm hakları saklıdır.</span>
+                    <div class="footer-badges">
+                        <span class="footer-badge"><i class="bi bi-shield-check"></i> Güvenli Ödeme</span>
+                        <span class="footer-badge"><i class="bi bi-award"></i> Sertifika</span>
+                        <span class="footer-badge"><i class="bi bi-phone"></i> Mobil Uyumlu</span>
+                    </div>
+                </div>
+            </div>
+        </footer>
+    </form>
+    <asp:PlaceHolder runat="server"><%: Scripts.Render("~/Scripts/bootstrap.js") %></asp:PlaceHolder>
+    <script>
+        // Nav search
+        document.getElementById('navSearchInput')?.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && this.value.trim()) {
+                window.location.href = 'Courses.aspx?q=' + encodeURIComponent(this.value.trim());
+            }
+        });
+    </script>
+</body>
+</html>

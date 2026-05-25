@@ -1,0 +1,26 @@
+## Visual Studio Ignore
+.vs/
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+bld/
+[Bb]in/
+[Oo]bj/
+App_Data/*.mdf
+App_Data/*.ldf
+
+## NuGet Packages
+packages/
+*.nuget.props
+*.nuget.targets
+
+## User-specific files
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+## Temporary files
+*.tmp
+*.log

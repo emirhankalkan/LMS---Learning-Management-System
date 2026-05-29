@@ -118,7 +118,7 @@
                     <span class="badge demo-badge p-2 rounded text-dark" onclick="fillCredentials('egitmen@eduflow.test', '123456')" title="Eğitmen girişi için tıklayın">
                         <i class="bi bi-person-video3 text-success"></i> Eğitmen
                     </span>
-                    <span class="badge demo-badge p-2 rounded text-dark" onclick="fillCredentials('admin@eduflow.test', 'admin123')" title="Admin girişi için tıklayın">
+                    <span class="badge demo-badge p-2 rounded text-dark" onclick="fillCredentials('admin@eduflow.test', 'admin')" title="Admin girişi için tıklayın">
                         <i class="bi bi-shield-lock-fill text-danger"></i> Yönetici
                     </span>
                 </div>

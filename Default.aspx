@@ -6,7 +6,7 @@
     <section class="hero home-hero">
         <div class="container">
             <div class="row align-items-center g-5">
-                <div class="col-lg-7">
+                <div class='<%= Session["UserId"] != null ? "col-lg-7" : "col-lg-9" %>'>
                     <span class="hero-kicker"><i class="bi bi-lightning-charge-fill"></i> Türkiye'nin büyüyen öğrenme platformu</span>
                     <h1>Hedefine uygun kursu bul,<br />kariyerini bir üst seviyeye taşı.</h1>
                     <p class="mb-4">Yazılım, tasarım, veri bilimi ve iş becerilerinde uzman eğitmenlerden Türkçe kurslar. Kendi hızında, istediğin yerden öğren.</p>
@@ -23,7 +23,10 @@
                         <a href="Courses.aspx?category=6" style="color:var(--color-on-primary-muted);text-decoration:underline;margin:0 6px;">Pazarlama</a>
                     </p>
                 </div>
+                <% if (Session["UserId"] != null) { %>
                 <div class="col-lg-5">
+                    <%= ContinuePanelHtml %>
+                    <% if (ContinuePanelHtml == null) { %>
                     <div class="hero-panel">
                         <div class="hero-panel-header">
                             <span>Devam ettiğin kurs</span>
@@ -61,7 +64,18 @@
                             <i class="bi bi-play-circle"></i> Devam Et
                         </a>
                     </div>
+                    <% } %>
                 </div>
+                <% } else { %>
+                <div class="col-lg-3 d-none d-lg-block">
+                    <div class="hero-welcome-badge" style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); padding:24px; border-radius:var(--radius-lg); text-align:center; backdrop-filter:blur(10px);">
+                        <i class="bi bi-rocket-takeoff" style="font-size:3rem; color:var(--color-accent); display:block; margin-bottom:12px;"></i>
+                        <h4 style="font-size:16px; font-weight:600; color:#fff; margin-bottom:8px;">Öğrenmeye Başla!</h4>
+                        <p style="font-size:13px; color:var(--color-on-primary-muted); margin-bottom:16px;">Kariyerini dönüştürecek Türkçe eğitim içerikleri ve sertifikalı programlar seni bekliyor.</p>
+                        <a class="btn btn-accent btn-sm w-100" href="Register.aspx">Ücretsiz Kaydol</a>
+                    </div>
+                </div>
+                <% } %>
             </div>
             <div class="hero-stats">
                 <div><strong>12.000+</strong><span>Aktif Öğrenci</span></div>

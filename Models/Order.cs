@@ -8,6 +8,7 @@ namespace EduFlow.Models
         public int UserId { get; set; }
         public int CourseId { get; set; }
         public string CourseTitle { get; set; }
+        public string ThumbnailUrl { get; set; }
         public decimal Amount { get; set; }
         public string Status { get; set; }
         public string PaymentRef { get; set; }

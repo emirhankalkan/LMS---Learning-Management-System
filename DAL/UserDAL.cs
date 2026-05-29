@@ -74,5 +74,61 @@ namespace EduFlow.DAL
                 CreatedAt = Convert.ToDateTime(reader["CreatedAt"])
             };
         }
+
+        public User GetUserById(int userId)
+        {
+            using (var connection = Db.OpenConnection())
+            using (var command = Db.StoredProcedure("sp_GetUserById", connection))
+            {
+                command.Parameters.AddWithValue("@UserId", userId);
+                using (var reader = command.ExecuteReader())
+                {
+                    if (!reader.Read()) return null;
+                    var user = MapUser(reader);
+                    // Ek alanlar
+                    if (HasColumn(reader, "EnrolledCourses"))
+                        user.EnrolledCourses = reader["EnrolledCourses"] == DBNull.Value ? 0 : Convert.ToInt32(reader["EnrolledCourses"]);
+                    if (HasColumn(reader, "CompletedLessons"))
+                        user.CompletedLessonsTotal = reader["CompletedLessons"] == DBNull.Value ? 0 : Convert.ToInt32(reader["CompletedLessons"]);
+                    return user;
+                }
+            }
+        }
+
+        public bool UpdateProfile(int userId, string fullName, string photoUrl = null)
+        {
+            using (var connection = Db.OpenConnection())
+            using (var command = Db.StoredProcedure("sp_UpdateUserProfile", connection))
+            {
+                command.Parameters.AddWithValue("@UserId", userId);
+                command.Parameters.AddWithValue("@FullName", fullName);
+                command.Parameters.AddWithValue("@PhotoUrl", (object)photoUrl ?? DBNull.Value);
+                command.ExecuteNonQuery();
+                return true;
+            }
+        }
+
+        public bool ChangePassword(int userId, string oldPassword, string newPassword)
+        {
+            string oldHash = SecurityService.HashPassword(oldPassword);
+            string newHash = SecurityService.HashPassword(newPassword);
+            using (var connection = Db.OpenConnection())
+            using (var command = Db.StoredProcedure("sp_ChangePassword", connection))
+            {
+                command.Parameters.AddWithValue("@UserId", userId);
+                command.Parameters.AddWithValue("@OldPassword", oldHash);
+                command.Parameters.AddWithValue("@NewPassword", newHash);
+                var result = command.ExecuteScalar();
+                return result != null && Convert.ToInt32(result) == 1;
+            }
+        }
+
+        private static bool HasColumn(SqlDataReader reader, string columnName)
+        {
+            for (int i = 0; i < reader.FieldCount; i++)
+                if (reader.GetName(i).Equals(columnName, StringComparison.OrdinalIgnoreCase))
+                    return true;
+            return false;
+        }
     }
 }

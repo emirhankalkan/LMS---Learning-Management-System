@@ -82,7 +82,7 @@ namespace EduFlow
 
                 string buttonHtml = progress == 100
                     ? @"<a class=""btn btn-success btn-sm flex-grow-1"" href=""#"" onclick=""alert('Sertifikanız başarıyla oluşturuldu!'); return false;""><i class=""bi bi-award""></i> Sertifikayı Al</a>"
-                    : string.Format(@"<a class=""btn btn-primary-custom btn-sm flex-grow-1"" href=""CourseDetail.aspx?id={0}""><i class=""bi bi-play-circle""></i> Derse Devam Et</a>", course.CourseId);
+                    : string.Format(@"<a class=""btn btn-primary-custom btn-sm flex-grow-1"" href=""LessonWatch.aspx?courseId={0}""><i class=""bi bi-play-circle""></i> Derse Devam Et</a>", course.CourseId);
 
                 builder.AppendFormat(@"
                 <div class=""col-md-6"">

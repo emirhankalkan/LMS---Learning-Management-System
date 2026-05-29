@@ -13,5 +13,9 @@ namespace EduFlow.Models
         public string RoleName { get; set; }
         public bool IsActive { get; set; }
         public DateTime CreatedAt { get; set; }
+
+        // Profil sayfası için toplam istatistikler
+        public int EnrolledCourses { get; set; }
+        public int CompletedLessonsTotal { get; set; }
     }
 }

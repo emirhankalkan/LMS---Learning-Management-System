@@ -13,6 +13,7 @@ namespace EduFlow
         protected string FeaturedCoursesHtml { get; private set; }
         protected string FreeCoursesHtml     { get; private set; }
         protected string CategoryCardsHtml   { get; private set; }
+        protected string ContinuePanelHtml   { get; private set; }
 
         private readonly CourseDAL _dal = new CourseDAL();
 
@@ -23,6 +24,7 @@ namespace EduFlow
                 FeaturedCoursesHtml = BuildCourseCards(_dal.GetFeaturedCourses());
                 FreeCoursesHtml     = BuildCourseCards(_dal.GetFreeCourses());
                 CategoryCardsHtml   = BuildCategoryCards(_dal.GetAllCategories());
+                ContinuePanelHtml   = BuildContinuePanel();
             }
             catch (Exception ex)
             {
@@ -30,8 +32,91 @@ namespace EduFlow
                 FeaturedCoursesHtml = BuildCourseCards(Services.SampleData.GetFeaturedCourses());
                 FreeCoursesHtml     = BuildCourseCards(Services.SampleData.Courses.FindAll(c => c.IsFree));
                 CategoryCardsHtml   = BuildCategoryCardsFallback();
+                ContinuePanelHtml   = BuildEmptyContinuePanel();
                 System.Diagnostics.Debug.WriteLine("DB hatası, SampleData kullanılıyor: " + ex.Message);
             }
+        }
+
+        private string BuildContinuePanel()
+        {
+            if (Session["UserId"] == null)
+                return "";
+
+            Lesson lesson = null;
+            try { lesson = _dal.GetLastWatchedLesson(Convert.ToInt32(Session["UserId"])); }
+            catch { }
+
+            if (lesson == null)
+                return BuildEmptyContinuePanel();
+
+            var progress = Math.Max(0, Math.Min(100, lesson.CourseProgressPercent));
+            return string.Format(@"
+<div class=""hero-panel"">
+    <div class=""hero-panel-header"">
+        <span>Kaldığın yer</span>
+        <strong>{0}</strong>
+    </div>
+    <div class=""hero-progress"">
+        <div class=""d-flex justify-content-between"">
+            <span>{1}/{2} ders tamamlandı</span>
+            <strong>{3}%</strong>
+        </div>
+        <div class=""progress""><div class=""progress-bar"" style=""width:{3}%""></div></div>
+    </div>
+    <div class=""hero-panel-row"">
+        <i class=""bi bi-play-circle""></i>
+        <div>
+            <strong>Son izlenen ders</strong>
+            <span>{4}</span>
+        </div>
+    </div>
+    <div class=""hero-panel-row"">
+        <i class=""bi bi-clock-history""></i>
+        <div>
+            <strong>Hemen devam et</strong>
+            <span>{5}. dersten kaldığın yerden açılır</span>
+        </div>
+    </div>
+    <a class=""btn btn-primary-custom w-100 mt-4"" href=""LessonWatch.aspx?courseId={6}&lessonId={7}"">
+        <i class=""bi bi-play-circle""></i> Kaldığın Yerden Devam Et
+    </a>
+</div>",
+                E(lesson.CourseTitle),
+                lesson.CompletedLessons,
+                lesson.TotalLessons,
+                progress,
+                E(lesson.Title),
+                lesson.OrderIndex,
+                lesson.CourseId,
+                lesson.LessonId);
+        }
+
+        private static string BuildEmptyContinuePanel()
+        {
+            return @"
+<div class=""hero-panel"">
+    <div class=""hero-panel-header"">
+        <span>Öğrenmeye hazır</span>
+        <strong>Kursa başlayınca burada devam butonun görünür</strong>
+    </div>
+    <div class=""hero-panel-row"">
+        <i class=""bi bi-collection-play""></i>
+        <div>
+            <strong>Kayıtlı kurslarını aç</strong>
+            <span>İzlediğin son ders otomatik hatırlanır</span>
+        </div>
+    </div>
+    <div class=""hero-panel-row"">
+        <i class=""bi bi-graph-up-arrow""></i>
+        <div>
+            <strong>İlerlemeni takip et</strong>
+            <span>Dersleri tamamladıkça panel güncellenir</span>
+        </div>
+    </div>
+    <a class=""btn btn-primary-custom w-100 mt-4"" href=""Dashboard.aspx"">
+        <i class=""bi bi-grid""></i> Kurslarıma Git
+    </a>
+</div>";
         }
 
         private static string BuildCourseCards(List<Course> courses)

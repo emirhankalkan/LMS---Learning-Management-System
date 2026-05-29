@@ -123,7 +123,20 @@
                     <div class="buy-box">
                         <!-- Video Preview -->
                         <div class="ratio ratio-16x9 mb-3" style="border-radius:var(--radius-md);overflow:hidden;">
-                            <iframe src="https://www.youtube.com/embed/oev5wH-_XCI?list=PLKnjBHu2xXNPmFMvGKVHA_ijjrgUyNIXr" title="Kurs önizleme" allowfullscreen></iframe>
+                            <% if (HasPreviewVideo) { %>
+                                <% if (IsLocalVideo(PreviewVideoUrl)) { %>
+                                <video controls preload="metadata" style="width:100%;height:100%;object-fit:cover;background:#000;">
+                                    <source src="<%= System.Web.HttpUtility.HtmlAttributeEncode(ResolveVideoUrl(PreviewVideoUrl)) %>" type="<%= GetVideoMimeType(PreviewVideoUrl) %>" />
+                                    Tarayıcınız video oynatmayı desteklemiyor.
+                                </video>
+                                <% } else { %>
+                                <iframe src="<%: PreviewVideoUrl %>?autoplay=0&rel=0" title="Kurs önizleme" allowfullscreen></iframe>
+                                <% } %>
+                            <% } else { %>
+                                <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:#0b1a30;color:#fff;font-size:13px;">
+                                    <i class="bi bi-play-circle" style="font-size:28px;margin-right:8px;"></i> Önizleme videosu yok
+                                </div>
+                            <% } %>
                         </div>
                         <p class="text-muted mb-3" style="font-size:13px;text-align:center;"><i class="bi bi-eye"></i> Ücretsiz önizleme</p>
 
@@ -145,12 +158,23 @@
                                 </div>
                             <% } %>
                         <% } else { %>
-                            <a class="btn btn-accent w-100 mb-2" href="Cart.aspx?add=<%= Course.CourseId %>" style="font-size:16px;padding:12px;display:block;width:100%;text-align:center;">
+                            <% if (IsEnrolled) { %>
+                                <a class="btn btn-accent w-100 mb-2"
+                                   href="LessonWatch.aspx?courseId=<%= Course.CourseId %>"
+                                   style="font-size:16px;padding:12px;display:block;width:100%;text-align:center;">
+                                    <i class="bi bi-play-circle-fill"></i> Derse Başla
+                                </a>
+                                <div class="alert text-center" style="font-size:12px;padding:8px;margin-bottom:8px;border-radius:var(--radius-sm);background:var(--color-success-bg);color:var(--color-success);border:1px solid var(--color-success);">
+                                    <i class="bi bi-check-circle-fill"></i> Bu kursa zaten kayıtlısınız
+                                </div>
+                            <% } else { %>
+                            <a class="btn btn-accent w-100 mb-2" href='<%= Course.IsFree ? "CourseDetail.aspx?id=" + Course.CourseId + "&enroll=1" : "Cart.aspx?add=" + Course.CourseId %>' style="font-size:16px;padding:12px;display:block;width:100%;text-align:center;">
                                 <i class="bi bi-cart-plus"></i> <%= Course.IsFree ? "Ücretsiz Kaydol" : "Sepete Ekle" %>
                             </a>
                             <a class="btn btn-outline-custom w-100 mb-3" href="Favorites.aspx?add=<%= Course.CourseId %>" style="display:block;width:100%;text-align:center;">
                                 <i class="bi bi-heart"></i> Favorilere Ekle
                             </a>
+                            <% } %>
                         <% } %>
                         <p class="text-muted text-center mb-3" style="font-size:12.5px;">30 gün iade garantisi</p>
 

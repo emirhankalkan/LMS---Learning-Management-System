@@ -175,6 +175,26 @@ namespace EduFlow.DAL
             }
         }
 
+        public bool EnrollFreeCourse(int userId, int courseId)
+        {
+            using (var conn = Db.OpenConnection())
+            using (var cmd = new SqlCommand(
+                @"IF EXISTS (SELECT 1 FROM Courses WHERE CourseId = @CourseId AND IsActive = 1 AND IsFree = 1)
+                  BEGIN
+                      IF NOT EXISTS (SELECT 1 FROM Enrollments WHERE UserId = @UserId AND CourseId = @CourseId)
+                          INSERT INTO Enrollments (UserId, CourseId) VALUES (@UserId, @CourseId);
+
+                      SELECT CAST(1 AS BIT);
+                  END
+                  ELSE
+                      SELECT CAST(0 AS BIT);", conn))
+            {
+                cmd.Parameters.AddWithValue("@UserId", userId);
+                cmd.Parameters.AddWithValue("@CourseId", courseId);
+                return Convert.ToBoolean(cmd.ExecuteScalar());
+            }
+        }
+
         // ---- Yardımcı ----
         private static List<Course> ReadCourses(string sp)
         {
@@ -226,34 +246,63 @@ namespace EduFlow.DAL
         public void SaveCourseDiscount(int courseId, string code, int discountPercentage)
         {
             using (var conn = Db.OpenConnection())
-            using (var cmd = Db.StoredProcedure("sp_SaveCourseDiscount", conn))
             {
-                cmd.Parameters.AddWithValue("@CourseId", courseId);
-                cmd.Parameters.AddWithValue("@Code", code);
-                cmd.Parameters.AddWithValue("@DiscountPercentage", discountPercentage);
-                cmd.ExecuteNonQuery();
+                EnsureCourseDiscounts(conn);
+
+                using (var cmd = new SqlCommand(
+                    @"DELETE FROM CourseDiscounts WHERE CourseId = @CourseId;
+                      DELETE FROM CourseDiscounts WHERE Code = UPPER(LTRIM(RTRIM(@Code)));
+                      INSERT INTO CourseDiscounts (CourseId, Code, DiscountPercentage, IsActive)
+                      VALUES (@CourseId, UPPER(LTRIM(RTRIM(@Code))), @DiscountPercentage, 1);", conn))
+                {
+                    cmd.Parameters.AddWithValue("@CourseId", courseId);
+                    cmd.Parameters.AddWithValue("@Code", code);
+                    cmd.Parameters.AddWithValue("@DiscountPercentage", discountPercentage);
+                    cmd.ExecuteNonQuery();
+                }
+            }
+        }
+
+        public void ClearCourseDiscount(int courseId)
+        {
+            using (var conn = Db.OpenConnection())
+            {
+                EnsureCourseDiscounts(conn);
+
+                using (var cmd = new SqlCommand("DELETE FROM CourseDiscounts WHERE CourseId = @CourseId", conn))
+                {
+                    cmd.Parameters.AddWithValue("@CourseId", courseId);
+                    cmd.ExecuteNonQuery();
+                }
             }
         }
 
         public CourseDiscount GetDiscountByCode(string code)
         {
             using (var conn = Db.OpenConnection())
-            using (var cmd = Db.StoredProcedure("sp_GetDiscountByCode", conn))
             {
-                cmd.Parameters.AddWithValue("@Code", code);
-                using (var reader = cmd.ExecuteReader())
+                EnsureCourseDiscounts(conn);
+
+                using (var cmd = new SqlCommand(
+                    @"SELECT TOP 1 *
+                      FROM CourseDiscounts
+                      WHERE Code = UPPER(LTRIM(RTRIM(@Code))) AND IsActive = 1;", conn))
                 {
-                    if (reader.Read())
+                    cmd.Parameters.AddWithValue("@Code", code);
+                    using (var reader = cmd.ExecuteReader())
                     {
-                        return new CourseDiscount
+                        if (reader.Read())
                         {
-                            DiscountId = Convert.ToInt32(reader["DiscountId"]),
-                            CourseId = Convert.ToInt32(reader["CourseId"]),
-                            Code = reader["Code"].ToString(),
-                            DiscountPercentage = Convert.ToInt32(reader["DiscountPercentage"]),
-                            IsActive = Convert.ToBoolean(reader["IsActive"]),
-                            CreatedAt = Convert.ToDateTime(reader["CreatedAt"])
-                        };
+                            return new CourseDiscount
+                            {
+                                DiscountId = Convert.ToInt32(reader["DiscountId"]),
+                                CourseId = Convert.ToInt32(reader["CourseId"]),
+                                Code = reader["Code"].ToString(),
+                                DiscountPercentage = Convert.ToInt32(reader["DiscountPercentage"]),
+                                IsActive = Convert.ToBoolean(reader["IsActive"]),
+                                CreatedAt = Convert.ToDateTime(reader["CreatedAt"])
+                            };
+                        }
                     }
                 }
             }
@@ -263,26 +312,204 @@ namespace EduFlow.DAL
         public CourseDiscount GetDiscountByCourse(int courseId)
         {
             using (var conn = Db.OpenConnection())
-            using (var cmd = Db.StoredProcedure("sp_GetDiscountByCourse", conn))
             {
-                cmd.Parameters.AddWithValue("@CourseId", courseId);
-                using (var reader = cmd.ExecuteReader())
+                EnsureCourseDiscounts(conn);
+
+                using (var cmd = new SqlCommand(
+                    @"SELECT TOP 1 *
+                      FROM CourseDiscounts
+                      WHERE CourseId = @CourseId AND IsActive = 1
+                      ORDER BY CreatedAt DESC;", conn))
                 {
-                    if (reader.Read())
+                    cmd.Parameters.AddWithValue("@CourseId", courseId);
+                    using (var reader = cmd.ExecuteReader())
                     {
-                        return new CourseDiscount
+                        if (reader.Read())
                         {
-                            DiscountId = Convert.ToInt32(reader["DiscountId"]),
-                            CourseId = Convert.ToInt32(reader["CourseId"]),
-                            Code = reader["Code"].ToString(),
-                            DiscountPercentage = Convert.ToInt32(reader["DiscountPercentage"]),
-                            IsActive = Convert.ToBoolean(reader["IsActive"]),
-                            CreatedAt = Convert.ToDateTime(reader["CreatedAt"])
-                        };
+                            return new CourseDiscount
+                            {
+                                DiscountId = Convert.ToInt32(reader["DiscountId"]),
+                                CourseId = Convert.ToInt32(reader["CourseId"]),
+                                Code = reader["Code"].ToString(),
+                                DiscountPercentage = Convert.ToInt32(reader["DiscountPercentage"]),
+                                IsActive = Convert.ToBoolean(reader["IsActive"]),
+                                CreatedAt = Convert.ToDateTime(reader["CreatedAt"])
+                            };
+                        }
                     }
                 }
             }
             return null;
+        }
+
+        private static void EnsureCourseDiscounts(SqlConnection conn)
+        {
+            using (var cmd = new SqlCommand(
+                @"IF OBJECT_ID('dbo.CourseDiscounts', 'U') IS NULL
+                  BEGIN
+                      CREATE TABLE dbo.CourseDiscounts (
+                          DiscountId INT IDENTITY(1,1) PRIMARY KEY,
+                          CourseId INT NOT NULL REFERENCES dbo.Courses(CourseId) ON DELETE CASCADE,
+                          Code NVARCHAR(50) NOT NULL UNIQUE,
+                          DiscountPercentage INT NOT NULL CHECK (DiscountPercentage BETWEEN 1 AND 99),
+                          IsActive BIT NOT NULL DEFAULT 1,
+                          CreatedAt DATETIME NOT NULL DEFAULT GETDATE()
+                      );
+                  END", conn))
+            {
+                cmd.ExecuteNonQuery();
+            }
+        }
+
+        // ---- Sipariş Geçmişi ----
+        public List<Models.Order> GetUserOrders(int userId)
+        {
+            var list = new List<Models.Order>();
+            using (var conn = Db.OpenConnection())
+            using (var cmd = Db.StoredProcedure("sp_GetUserOrders", conn))
+            {
+                cmd.Parameters.AddWithValue("@UserId", userId);
+                using (var reader = cmd.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        list.Add(new Models.Order
+                        {
+                            OrderId      = Convert.ToInt32(reader["OrderId"]),
+                            UserId       = Convert.ToInt32(reader["UserId"]),
+                            CourseId     = Convert.ToInt32(reader["CourseId"]),
+                            CourseTitle  = reader["CourseTitle"].ToString(),
+                            ThumbnailUrl = reader["ThumbnailUrl"] == DBNull.Value ? null : reader["ThumbnailUrl"].ToString(),
+                            Amount       = Convert.ToDecimal(reader["Amount"]),
+                            Status       = reader["Status"].ToString(),
+                            PaymentRef   = reader["PaymentRef"] == DBNull.Value ? null : reader["PaymentRef"].ToString(),
+                            CreatedAt    = Convert.ToDateTime(reader["CreatedAt"])
+                        });
+                    }
+                }
+            }
+            return list;
+        }
+
+        // ---- Ders Tamamlama ----
+        public void CompleteLesson(int userId, int lessonId)
+        {
+            using (var conn = Db.OpenConnection())
+            using (var cmd = Db.StoredProcedure("sp_CompleteLesson", conn))
+            {
+                cmd.Parameters.AddWithValue("@UserId", userId);
+                cmd.Parameters.AddWithValue("@LessonId", lessonId);
+                cmd.ExecuteNonQuery();
+            }
+        }
+
+        public void MarkLessonWatched(int userId, int lessonId)
+        {
+            using (var conn = Db.OpenConnection())
+            {
+                EnsureLastWatchedColumn(conn);
+
+                using (var cmd = new SqlCommand(
+                    @"IF EXISTS (SELECT 1 FROM LessonProgress WHERE UserId = @UserId AND LessonId = @LessonId)
+                          UPDATE LessonProgress
+                          SET LastWatchedAt = GETDATE()
+                          WHERE UserId = @UserId AND LessonId = @LessonId;
+                      ELSE
+                          INSERT INTO LessonProgress (UserId, LessonId, IsCompleted, CompletedAt, LastWatchedAt)
+                          VALUES (@UserId, @LessonId, 0, NULL, GETDATE());", conn))
+                {
+                    cmd.Parameters.AddWithValue("@UserId", userId);
+                    cmd.Parameters.AddWithValue("@LessonId", lessonId);
+                    cmd.ExecuteNonQuery();
+                }
+            }
+        }
+
+        public Lesson GetLastWatchedLesson(int userId)
+        {
+            using (var conn = Db.OpenConnection())
+            {
+                EnsureLastWatchedColumn(conn);
+
+                using (var cmd = new SqlCommand(
+                    @"SELECT TOP 1
+                             l.LessonId,
+                             l.CourseId,
+                             l.Title,
+                             l.VideoUrl,
+                             l.Duration,
+                             l.OrderIndex,
+                             l.IsPreview,
+                             c.Title AS CourseTitle,
+                             (SELECT COUNT(*) FROM Lessons tl WHERE tl.CourseId = l.CourseId) AS TotalLessons,
+                             (SELECT COUNT(*)
+                              FROM LessonProgress clp
+                              JOIN Lessons cl ON cl.LessonId = clp.LessonId
+                              WHERE clp.UserId = @UserId
+                                AND cl.CourseId = l.CourseId
+                                AND clp.IsCompleted = 1) AS CompletedLessons
+                      FROM LessonProgress lp
+                      JOIN Lessons l ON l.LessonId = lp.LessonId
+                      JOIN Courses c ON c.CourseId = l.CourseId
+                      WHERE lp.UserId = @UserId
+                        AND c.IsActive = 1
+                        AND EXISTS (
+                            SELECT 1
+                            FROM Enrollments e
+                            WHERE e.UserId = @UserId AND e.CourseId = l.CourseId
+                        )
+                        AND (lp.LastWatchedAt IS NOT NULL OR lp.CompletedAt IS NOT NULL)
+                      ORDER BY COALESCE(lp.LastWatchedAt, lp.CompletedAt) DESC, lp.ProgressId DESC;", conn))
+                {
+                    cmd.Parameters.AddWithValue("@UserId", userId);
+
+                    using (var reader = cmd.ExecuteReader())
+                    {
+                        if (!reader.Read()) return null;
+
+                        var completed = Convert.ToInt32(reader["CompletedLessons"]);
+                        var total = Convert.ToInt32(reader["TotalLessons"]);
+
+                        return new Lesson
+                        {
+                            LessonId = Convert.ToInt32(reader["LessonId"]),
+                            CourseId = Convert.ToInt32(reader["CourseId"]),
+                            Title = reader["Title"].ToString(),
+                            VideoUrl = reader["VideoUrl"] == DBNull.Value ? null : reader["VideoUrl"].ToString(),
+                            Duration = Convert.ToInt32(reader["Duration"]),
+                            OrderIndex = Convert.ToInt32(reader["OrderIndex"]),
+                            IsPreview = Convert.ToBoolean(reader["IsPreview"]),
+                            CourseTitle = reader["CourseTitle"].ToString(),
+                            CompletedLessons = completed,
+                            TotalLessons = total,
+                            CourseProgressPercent = total > 0 ? (completed * 100) / total : 0
+                        };
+                    }
+                }
+            }
+        }
+
+        private static void EnsureLastWatchedColumn(SqlConnection conn)
+        {
+            using (var cmd = new SqlCommand(
+                @"IF COL_LENGTH('dbo.LessonProgress', 'LastWatchedAt') IS NULL
+                      ALTER TABLE dbo.LessonProgress ADD LastWatchedAt DATETIME NULL;", conn))
+            {
+                cmd.ExecuteNonQuery();
+            }
+        }
+
+        // ---- Kullanıcının Kursa Kayıtlı Olup Olmadığını Kontrol Et ----
+        public bool IsEnrolled(int userId, int courseId)
+        {
+            using (var conn = Db.OpenConnection())
+            using (var cmd = new SqlCommand(
+                "SELECT COUNT(*) FROM Enrollments WHERE UserId=@UserId AND CourseId=@CourseId", conn))
+            {
+                cmd.Parameters.AddWithValue("@UserId", userId);
+                cmd.Parameters.AddWithValue("@CourseId", courseId);
+                return Convert.ToInt32(cmd.ExecuteScalar()) > 0;
+            }
         }
     }
 }

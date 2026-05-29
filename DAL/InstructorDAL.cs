@@ -190,6 +190,50 @@ namespace EduFlow.DAL
             }
             return list;
         }
+
+        // ---- Kurs Güncelle ----
+        public void UpdateCourse(int courseId, string title, string description, string thumbnailUrl,
+                                 decimal price, bool isFree, int categoryId,
+                                 string level, string language)
+        {
+            using (var conn = Db.OpenConnection())
+            using (var cmd  = Db.StoredProcedure("sp_UpdateCourse", conn))
+            {
+                cmd.Parameters.AddWithValue("@CourseId",     courseId);
+                cmd.Parameters.AddWithValue("@Title",        title);
+                cmd.Parameters.AddWithValue("@Description",  description);
+                cmd.Parameters.AddWithValue("@ThumbnailUrl", thumbnailUrl ?? "");
+                cmd.Parameters.AddWithValue("@Price",        price);
+                cmd.Parameters.AddWithValue("@IsFree",       isFree);
+                cmd.Parameters.AddWithValue("@CategoryId",   categoryId);
+                cmd.Parameters.AddWithValue("@Level",        level);
+                cmd.Parameters.AddWithValue("@Language",     language);
+                cmd.ExecuteNonQuery();
+            }
+        }
+
+        // ---- Ders Sil ----
+        public void DeleteLesson(int lessonId)
+        {
+            using (var conn = Db.OpenConnection())
+            using (var cmd  = Db.StoredProcedure("sp_DeleteLesson", conn))
+            {
+                cmd.Parameters.AddWithValue("@LessonId", lessonId);
+                cmd.ExecuteNonQuery();
+            }
+        }
+
+        // ---- Ders Sırası Değiştir (Yukarı/Aşağı) ----
+        public void MoveLesson(int lessonId, string direction)
+        {
+            using (var conn = Db.OpenConnection())
+            using (var cmd  = Db.StoredProcedure("sp_MoveLesson", conn))
+            {
+                cmd.Parameters.AddWithValue("@LessonId",  lessonId);
+                cmd.Parameters.AddWithValue("@Direction", direction);
+                cmd.ExecuteNonQuery();
+            }
+        }
     }
 
     // ---- Yardımcı Modeller ----

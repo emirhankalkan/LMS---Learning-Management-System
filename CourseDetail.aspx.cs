@@ -18,6 +18,8 @@ namespace EduFlow
         protected string PreviewVideoUrl { get; private set; }
         protected bool HasPreviewVideo { get; private set; }
 
+        protected bool IsEnrolled { get; private set; }
+
         private readonly CourseDAL _dal = new CourseDAL();
 
         private static readonly string[] _willLearnItems = new[]
@@ -61,10 +63,36 @@ namespace EduFlow
                 PreviewVideoUrl = GetPreviewVideoUrl(fallbackLessons);
             }
 
+            if (Request.QueryString["enroll"] == "1" && Course != null)
+            {
+                if (Session["UserId"] == null)
+                {
+                    Response.Redirect("~/Login.aspx");
+                    return;
+                }
+
+                try
+                {
+                    if (_dal.EnrollFreeCourse(Convert.ToInt32(Session["UserId"]), Course.CourseId))
+                    {
+                        Response.Redirect("~/LessonWatch.aspx?courseId=" + Course.CourseId);
+                        return;
+                    }
+                }
+                catch { }
+            }
+
             if (Course != null) Title = Course.Title;
             HasPreviewVideo = !string.IsNullOrEmpty(PreviewVideoUrl) && PreviewVideoUrl != "about:blank";
             StarsHtml     = Course != null ? BuildStars(Course.AverageRating) : "";
             WillLearnHtml = BuildWillLearn();
+
+            // Kayıt kontrolü
+            if (Session["UserId"] != null && Course != null)
+            {
+                try { IsEnrolled = _dal.IsEnrolled(Convert.ToInt32(Session["UserId"]), Course.CourseId); }
+                catch { IsEnrolled = false; }
+            }
         }
 
         private static string GetPreviewVideoUrl(IEnumerable<Lesson> lessons)
@@ -159,5 +187,32 @@ namespace EduFlow
 
         private static string E(string value)
             => HttpUtility.HtmlEncode(value ?? string.Empty);
+
+        protected bool IsLocalVideo(string url)
+        {
+            if (string.IsNullOrEmpty(url)) return false;
+            return url.StartsWith("~/Uploads/", StringComparison.OrdinalIgnoreCase)
+                || url.StartsWith("/Uploads/", StringComparison.OrdinalIgnoreCase)
+                || url.StartsWith("Uploads/", StringComparison.OrdinalIgnoreCase);
+        }
+
+        protected string ResolveVideoUrl(string url)
+        {
+            if (string.IsNullOrEmpty(url)) return "";
+            if (url.StartsWith("~/")) return ResolveUrl(url);
+            if (url.StartsWith("/Uploads/", StringComparison.OrdinalIgnoreCase)) return ResolveUrl("~" + url);
+            if (url.StartsWith("Uploads/", StringComparison.OrdinalIgnoreCase)) return ResolveUrl("~/" + url);
+            return url;
+        }
+
+        protected string GetVideoMimeType(string url)
+        {
+            if (string.IsNullOrEmpty(url)) return "video/mp4";
+            var ext = System.IO.Path.GetExtension(url).ToLowerInvariant();
+            if (ext == ".webm") return "video/webm";
+            if (ext == ".ogg") return "video/ogg";
+            if (ext == ".mov" || ext == ".qt") return "video/quicktime";
+            return "video/mp4";
+        }
     }
 }

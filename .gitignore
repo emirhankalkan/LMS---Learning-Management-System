@@ -24,6 +24,11 @@ packages/
 ## Temporary files
 *.tmp
 *.log
+desktop.ini
+
+## Uploaded lesson videos
+Uploads/Lessons/*
+!Uploads/Lessons/.gitkeep
 
 ## Local Project Specifications
 eduflow-proje-plani.md

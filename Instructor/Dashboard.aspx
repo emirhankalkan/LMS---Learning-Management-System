@@ -3,15 +3,15 @@
 <asp:Content ID="Content1" ContentPlaceHolderID="InstructorContent" runat="server">
 
   <!-- Hoşgeldin Bandı -->
-  <div style="background:linear-gradient(135deg,#0f2027,#2c5364);border-radius:16px;padding:28px 32px;margin-bottom:28px;display:flex;align-items:center;gap:20px;">
-    <div style="width:60px;height:60px;border-radius:50%;background:rgba(93,240,193,.2);display:flex;align-items:center;justify-content:center;font-size:26px;color:#5DF0C1;flex-shrink:0;">
+  <div style="background:var(--color-primary);border-radius:var(--radius-lg);padding:28px 32px;margin-bottom:28px;display:flex;align-items:center;gap:20px;">
+    <div style="width:60px;height:60px;border-radius:50%;background:rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;font-size:26px;color:var(--color-accent);flex-shrink:0;">
       <i class="bi bi-person-video3"></i>
     </div>
     <div>
-      <div style="font-size:20px;font-weight:700;color:#fff;">Hoş geldin, <%: FullName %>! 👋</div>
+      <div style="font-size:20px;font-weight:700;color:#fff;">Hoş geldin, <%: FullName %>!</div>
       <div style="font-size:14px;color:rgba(255,255,255,.6);margin-top:4px;">İşte kurs performansına genel bir bakış.</div>
     </div>
-    <a href="AddCourse.aspx" class="btn ms-auto" style="background:#5DF0C1;color:#0f2027;font-weight:700;padding:10px 22px;border-radius:10px;text-decoration:none;">
+    <a href="AddCourse.aspx" class="btn ms-auto" style="background:var(--color-accent);color:var(--color-accent-dark);font-weight:700;padding:10px 22px;border-radius:var(--radius-md);text-decoration:none;">
       <i class="bi bi-plus-lg"></i> Yeni Kurs
     </a>
   </div>
@@ -20,39 +20,39 @@
   <div class="row g-3 mb-4">
     <div class="col-sm-6 col-xl-3">
       <div class="stat-card-ins">
-        <div class="d-flex align-items-center gap-3 mb-2">
-          <div class="stat-icon-ins" style="background:rgba(99,102,241,.12);color:#6366f1;"><i class="bi bi-collection-play-fill"></i></div>
-          <span style="font-size:13px;color:var(--color-text-muted);">Toplam Kurs</span>
+        <div class="d-flex align-items-center gap-3 mb-1">
+          <div class="stat-icon-ins" style="background:var(--color-primary-light);color:var(--color-primary);"><i class="bi bi-collection-play-fill"></i></div>
+          <span class="stat-label">Toplam Kurs</span>
         </div>
-        <div style="font-size:2rem;font-weight:800;"><%= Stats.TotalCourses %></div>
+        <div class="stat-value"><%= Stats.TotalCourses %></div>
       </div>
     </div>
     <div class="col-sm-6 col-xl-3">
       <div class="stat-card-ins">
-        <div class="d-flex align-items-center gap-3 mb-2">
-          <div class="stat-icon-ins" style="background:rgba(59,130,246,.12);color:#3b82f6;"><i class="bi bi-people-fill"></i></div>
-          <span style="font-size:13px;color:var(--color-text-muted);">Toplam Öğrenci</span>
+        <div class="d-flex align-items-center gap-3 mb-1">
+          <div class="stat-icon-ins" style="background:#E8F0FE;color:#3b5bdb;"><i class="bi bi-people-fill"></i></div>
+          <span class="stat-label">Toplam Öğrenci</span>
         </div>
-        <div style="font-size:2rem;font-weight:800;"><%= Stats.TotalStudents %></div>
+        <div class="stat-value"><%= Stats.TotalStudents %></div>
       </div>
     </div>
     <div class="col-sm-6 col-xl-3">
       <div class="stat-card-ins">
-        <div class="d-flex align-items-center gap-3 mb-2">
-          <div class="stat-icon-ins" style="background:rgba(16,185,129,.12);color:#10b981;"><i class="bi bi-currency-dollar"></i></div>
-          <span style="font-size:13px;color:var(--color-text-muted);">Toplam Gelir</span>
+        <div class="d-flex align-items-center gap-3 mb-1">
+          <div class="stat-icon-ins" style="background:var(--color-success-bg);color:var(--color-success);"><i class="bi bi-cash-stack"></i></div>
+          <span class="stat-label">Toplam Gelir</span>
         </div>
-        <div style="font-size:2rem;font-weight:800;">₺<%= Stats.TotalRevenue.ToString("N0") %></div>
+        <div class="stat-value">₺<%= Stats.TotalRevenue.ToString("N0") %></div>
       </div>
     </div>
     <div class="col-sm-6 col-xl-3">
       <div class="stat-card-ins">
-        <div class="d-flex align-items-center gap-3 mb-2">
-          <div class="stat-icon-ins" style="background:rgba(245,158,11,.12);color:#f59e0b;"><i class="bi bi-star-fill"></i></div>
-          <span style="font-size:13px;color:var(--color-text-muted);">Ortalama Puan</span>
+        <div class="d-flex align-items-center gap-3 mb-1">
+          <div class="stat-icon-ins" style="background:var(--color-warning-bg);color:var(--color-warning);"><i class="bi bi-star-fill"></i></div>
+          <span class="stat-label">Ortalama Puan</span>
         </div>
-        <div style="font-size:2rem;font-weight:800;"><%= Stats.AvgRating.ToString("F1") %></div>
-        <div style="font-size:12px;color:var(--color-text-muted);">(<%= Stats.TotalReviews %> değerlendirme)</div>
+        <div class="stat-value"><%= Stats.AvgRating.ToString("F1") %></div>
+        <div style="font-size:12px;color:var(--color-text-muted);margin-top:2px;">(<%= Stats.TotalReviews %> değerlendirme)</div>
       </div>
     </div>
   </div>

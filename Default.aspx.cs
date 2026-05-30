@@ -124,7 +124,7 @@ namespace EduFlow
             var sb = new StringBuilder();
             foreach (var c in courses)
             {
-                var thumb = A(c.ThumbnailUrl);
+                var thumb = Thumb(c.ThumbnailUrl);
                 var title = E(c.Title);
                 var level = E(c.Level);
                 var category = E(c.CategoryName);
@@ -139,7 +139,7 @@ namespace EduFlow
 <div class=""col-md-6 col-lg-4"">
   <article class=""course-card"">
     <div class=""card-thumb"">
-      <img src=""{0}"" alt=""{1}"" loading=""lazy"" />
+      <img src=""{0}"" alt=""{1}"" loading=""lazy"" onerror=""this.onerror=null;this.src='https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=900&q=60';"" />
       <div class=""card-badges"">{2}<span class=""badge-level"">{3}</span></div>
     </div>
     <div class=""card-body"">
@@ -218,5 +218,13 @@ namespace EduFlow
 
         private static string A(string value)
             => HttpUtility.HtmlAttributeEncode(value ?? string.Empty);
+
+        private static string Thumb(string url)
+        {
+            const string fallback = "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=900&q=60";
+            if (string.IsNullOrWhiteSpace(url)) return fallback;
+            if (url.StartsWith("~/")) return HttpUtility.HtmlAttributeEncode(url.Substring(1));
+            return HttpUtility.HtmlAttributeEncode(url);
+        }
     }
 }

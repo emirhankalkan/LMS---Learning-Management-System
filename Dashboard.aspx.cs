@@ -71,7 +71,7 @@ namespace EduFlow
             var builder = new StringBuilder();
             foreach (var course in courses)
             {
-                var thumb = A(course.ThumbnailUrl);
+                var thumb = Thumb(course.ThumbnailUrl);
                 var title = E(course.Title);
                 var category = E(course.CategoryName);
                 var instructor = E(course.InstructorName);
@@ -87,7 +87,7 @@ namespace EduFlow
                 builder.AppendFormat(@"
                 <div class=""col-md-6"">
                   <div class=""enrolled-card"" style=""display:flex;background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-md);overflow:hidden;margin-bottom:16px;box-shadow:var(--shadow-sm);"">
-                    <img src=""{0}"" alt=""{1}"" style=""width:160px;height:120px;object-fit:cover;"" />
+                    <img src=""{0}"" alt=""{1}"" style=""width:160px;height:120px;object-fit:cover;"" onerror=""this.onerror=null;this.src='https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=400&q=60';"" />
                     <div class=""enrolled-card-body"" style=""padding:14px;flex-grow:1;display:flex;flex-direction:column;justify-content:space-between;"">
                       <div>
                         <p class=""enrolled-card-meta"" style=""font-size:12px;color:var(--color-text-muted);margin:0 0 4px;"">{2} &bull; {3}</p>
@@ -142,7 +142,7 @@ namespace EduFlow
 
             foreach (var course in suggested)
             {
-                var thumb = A(course.ThumbnailUrl);
+                var thumb = Thumb(course.ThumbnailUrl);
                 var title = E(course.Title);
                 var level = E(course.Level);
                 var category = E(course.CategoryName);
@@ -155,7 +155,7 @@ namespace EduFlow
                 <div class=""col-md-4"">
                   <article class=""course-card"">
                     <div class=""card-thumb"">
-                      <img src=""{0}"" alt=""{1}"" loading=""lazy"" />
+                      <img src=""{0}"" alt=""{1}"" loading=""lazy"" onerror=""this.onerror=null;this.src='https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=900&q=60';"" />
                       <div class=""card-badges""><span class=""badge-level"">{2}</span></div>
                     </div>
                     <div class=""card-body"">
@@ -180,5 +180,13 @@ namespace EduFlow
 
         private static string A(string value)
             => HttpUtility.HtmlAttributeEncode(value ?? string.Empty);
+
+        private static string Thumb(string url)
+        {
+            const string fallback = "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=900&q=60";
+            if (string.IsNullOrWhiteSpace(url)) return fallback;
+            if (url.StartsWith("~/")) return HttpUtility.HtmlAttributeEncode(url.Substring(1));
+            return HttpUtility.HtmlAttributeEncode(url);
+        }
     }
 }

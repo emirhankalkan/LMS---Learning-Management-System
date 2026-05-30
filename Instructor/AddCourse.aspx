@@ -147,14 +147,16 @@
         <label class="form-label">Video Kaynağı</label>
         <div style="display:grid;gap:10px;">
           <input class="form-control" id="lessonVideo" name="lessonVideo" type="url"
-                 placeholder="YouTube/Vimeo linki: https://www.youtube.com/watch?v=..." />
+                 placeholder="YouTube/Vimeo linki: https://www.youtube.com/watch?v=..."
+                 onblur="detectYoutubeDuration(this.value)" />
           <div style="display:flex;align-items:center;gap:10px;color:var(--color-text-muted);font-size:12px;">
             <span style="height:1px;background:var(--color-border);flex:1;"></span>
             <span>veya</span>
             <span style="height:1px;background:var(--color-border);flex:1;"></span>
           </div>
-          <input class="form-control" id="lessonVideoFile" name="lessonVideoFile" type="file" accept="video/mp4,video/webm,video/quicktime" />
-          <small class="text-muted">MP4, WebM veya MOV yükleyebilirsiniz. Link girerseniz dosya yüklemeniz gerekmez.</small>
+          <input class="form-control" id="lessonVideoFile" name="lessonVideoFile" type="file" accept="video/mp4,video/webm,video/quicktime"
+                 onchange="detectVideoFileDuration(this)" />
+          <small class="text-muted" id="durationHint">MP4, WebM veya MOV yükleyebilirsiniz. Link girerseniz dosya yüklemeniz gerekmez.</small>
         </div>
       </div>
     </div>
@@ -199,7 +201,83 @@
 <input type="hidden" name="moveDirection" id="moveDirection" value="" />
 
 <script>
+  // ── Otomatik Süre Algılama ────────────────────────────────────────────────
+
+  // Dosya yüklenince HTML5 video metadata üzerinden süreyi oku
+  function detectVideoFileDuration(input) {
+    if (!input.files || !input.files[0]) return;
+    var file = input.files[0];
+    var objectUrl = URL.createObjectURL(file);
+    var vid = document.createElement('video');
+    vid.preload = 'metadata';
+    vid.onloadedmetadata = function () {
+      URL.revokeObjectURL(objectUrl);
+      var totalSeconds = Math.round(vid.duration);
+      if (!isNaN(totalSeconds) && totalSeconds > 0) {
+        var minutes = Math.max(1, Math.ceil(totalSeconds / 60));
+        document.getElementById('lessonDuration').value = minutes;
+        setDurationHint('Süre otomatik algılandı: ' + formatDuration(totalSeconds));
+      } else {
+        setDurationHint('Süre okunamadı, lütfen manuel girin.');
+      }
+    };
+    vid.onerror = function () {
+      URL.revokeObjectURL(objectUrl);
+      setDurationHint('Süre algılanamadı, lütfen manuel girin.');
+    };
+    vid.src = objectUrl;
+    setDurationHint('Süre okunuyor...');
+  }
+
+  // YouTube URL girilince noembed ile videoyu doğrula ve kullanıcıyı bilgilendir
+  function detectYoutubeDuration(url) {
+    url = (url || '').trim();
+    if (!url) return;
+    var videoId = extractYoutubeId(url);
+    if (!videoId) return;
+
+    setDurationHint('YouTube videosu kontrol ediliyor...');
+
+    fetch('https://noembed.com/embed?url=' + encodeURIComponent('https://www.youtube.com/watch?v=' + videoId))
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        if (data && data.title) {
+          setDurationHint('Video doğrulandı: "' + data.title.substring(0, 50) + (data.title.length > 50 ? '...' : '') + '" — Süreyi manuel girin.');
+        } else {
+          setDurationHint('YouTube linki doğrulandı. Lütfen süreyi manuel girin.');
+        }
+      })
+      .catch(function () {
+        setDurationHint('Bağlantı kurulamadı. Lütfen süreyi manuel girin.');
+      });
+  }
+
+  function extractYoutubeId(url) {
+    var m = url.match(/(?:v=|youtu\.be\/|embed\/)([A-Za-z0-9_-]{11})/);
+    return m ? m[1] : null;
+  }
+
+  function formatDuration(totalSeconds) {
+    var h = Math.floor(totalSeconds / 3600);
+    var m = Math.floor((totalSeconds % 3600) / 60);
+    var s = totalSeconds % 60;
+    if (h > 0) return h + ' saat ' + m + ' dk ' + s + ' sn';
+    if (m > 0) return m + ' dakika ' + s + ' saniye';
+    return s + ' saniye';
+  }
+
+  function setDurationHint(msg) {
+    var el = document.getElementById('durationHint');
+    if (!el) return;
+    el.style.color = 'var(--color-primary)';
+    el.style.fontWeight = '500';
+    el.textContent = msg;
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+
   function goToStep2() {
+
     // Validasyon
     var title = document.getElementById('courseTitle').value.trim();
     var desc  = document.getElementById('courseDesc').value.trim();

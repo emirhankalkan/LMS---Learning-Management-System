@@ -4,22 +4,20 @@
     <style>
         .iyzico-container {
             background-color: #f4f6fa;
-            min-height: 80vh;
-            padding: 40px 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            min-height: 100vh;
+            padding: 48px 0 64px;
         }
         .iyzico-card {
             background: #ffffff;
             border-radius: var(--radius-lg);
             box-shadow: 0 15px 35px rgba(28, 43, 58, 0.08);
             border: 1px solid var(--color-border);
-            max-width: 800px;
+            max-width: 1000px;
             width: 100%;
             overflow: hidden;
             display: flex;
             flex-direction: row;
+            margin: 0 auto;
         }
         .iyzico-left {
             flex: 1.2;
@@ -30,9 +28,15 @@
             flex: 0.8;
             padding: 36px;
             background-color: #fafbfc;
+            position: relative;
+        }
+        .iyzico-sticky-wrapper {
+            position: -webkit-sticky;
+            position: sticky;
+            top: 24px;
             display: flex;
             flex-direction: column;
-            justify-content: space-between;
+            gap: 28px;
         }
         .iyzico-logo-bar {
             display: flex;
@@ -221,22 +225,29 @@
         }
         
         @media (max-width: 768px) {
+            .iyzico-container { padding: 24px 0 48px; }
             .iyzico-card {
                 flex-direction: column;
+                border-radius: var(--radius-md);
             }
             .iyzico-left {
                 border-right: 0;
                 border-bottom: 1px solid #f0f2f5;
-                padding: 24px;
+                padding: 20px;
             }
             .iyzico-right {
-                padding: 24px;
+                padding: 20px;
+            }
+            .card-preview { height: 150px; }
+            .iyzico-sticky-wrapper {
+                position: static;
+                gap: 20px;
             }
         }
     </style>
 
     <div class="iyzico-container">
-        <div class="container d-flex justify-content-center">
+        <div class="container">
             <div class="iyzico-card">
                 
                 <!-- LEFT COLUMN: Payment Info & Card Fields -->
@@ -324,32 +335,34 @@
 
                 <!-- RIGHT COLUMN: Order Summary -->
                 <div class="iyzico-right">
-                    <div>
-                        <h4 style="font-size: 14px; font-weight: 700; color: #1c2b3a; border-bottom: 1px solid #f0f2f5; padding-bottom: 12px; margin-bottom: 16px;">
-                            Sipariş Özeti
-                        </h4>
-                        
-                        <div style="max-height: 240px; overflow-y: auto; padding-right: 4px;">
-                            <%= OrderItemsHtml %>
+                    <div class="iyzico-sticky-wrapper">
+                        <div>
+                            <h4 style="font-size: 14px; font-weight: 700; color: #1c2b3a; border-bottom: 1px solid #f0f2f5; padding-bottom: 12px; margin-bottom: 16px;">
+                                Sipariş Özeti
+                            </h4>
+                            
+                            <div style="max-height: 240px; overflow-y: auto; padding-right: 4px;">
+                                <%= OrderItemsHtml %>
+                            </div>
                         </div>
-                    </div>
 
-                    <div style="border-top: 1px solid #f0f2f5; padding-top: 16px; margin-top: 16px;">
-                        <div class="d-flex justify-content-between mb-2" style="font-size: 13px; color: var(--color-text-secondary);">
-                            <span>Ara Toplam</span>
-                            <span><%= SubTotalText %></span>
-                        </div>
-                        <div class="d-flex justify-content-between mb-3" style="font-size: 13px; color: var(--color-text-secondary);">
-                            <span>KDV (%0)</span>
-                            <span>₺0</span>
-                        </div>
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <span style="font-weight: 700; color: #0b1a30; font-size:14px;">Ödenecek Tutar</span>
-                            <span style="font-size: 20px; font-weight: 800; color: #1783FA;"><%= TotalText %></span>
-                        </div>
-                        
-                        <div class="text-center" style="font-size: 11px; color: var(--color-text-muted);">
-                            Bu ekran demo amaçlıdır; gerçek iyzico tahsilatı yapılmaz.
+                        <div style="border-top: 1px solid #f0f2f5; padding-top: 16px;">
+                            <div class="d-flex justify-content-between mb-2" style="font-size: 13px; color: var(--color-text-secondary);">
+                                <span>Ara Toplam</span>
+                                <span><%= SubTotalText %></span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-3" style="font-size: 13px; color: var(--color-text-secondary);">
+                                <span>KDV (%0)</span>
+                                <span>₺0</span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <span style="font-weight: 700; color: #0b1a30; font-size:14px;">Ödenecek Tutar</span>
+                                <span style="font-size: 20px; font-weight: 800; color: #1783FA;"><%= TotalText %></span>
+                            </div>
+                            
+                            <div class="text-center" style="font-size: 11px; color: var(--color-text-muted);">
+                                Bu ekran demo amaçlıdır; gerçek iyzico tahsilatı yapılmaz.
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -422,6 +435,22 @@
 
     <!-- JavaScript Form Interactions & Validations -->
     <script type="text/javascript">
+        // Luhn Algorithm - validates credit card number mathematically
+        function luhnCheck(num) {
+            let sum = 0;
+            let alternate = false;
+            for (let i = num.length - 1; i >= 0; i--) {
+                let n = parseInt(num[i], 10);
+                if (alternate) {
+                    n *= 2;
+                    if (n > 9) n -= 9;
+                }
+                sum += n;
+                alternate = !alternate;
+            }
+            return sum % 10 === 0;
+        }
+
         // Real-time card formatting & preview updates
         function formatCardNumber() {
             const input = document.getElementById('cardNumber');
@@ -476,6 +505,10 @@
             }
             if (number.length < 16) {
                 showError('Lütfen 16 haneli kart numaranızı girin.');
+                return;
+            }
+            if (!luhnCheck(number)) {
+                showError('Geçersiz kart numarası. Lütfen kart numaranızı kontrol edin.');
                 return;
             }
             if (!month || !year) {

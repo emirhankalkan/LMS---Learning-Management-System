@@ -35,6 +35,8 @@
                     <ul class="navbar-nav me-3">
                         <li class="nav-item"><a class="nav-link" runat="server" href="~/Default.aspx">Ana Sayfa</a></li>
                         <li class="nav-item"><a class="nav-link" runat="server" href="~/Courses.aspx">Kurslar</a></li>
+                        <li class="nav-item"><a class="nav-link" runat="server" href="~/About.aspx">Hakkımızda</a></li>
+                        <li class="nav-item"><a class="nav-link" runat="server" href="~/Contact.aspx">İletişim</a></li>
                         <% if (Session["UserId"] != null) { %>
                         <% if (Session["UserRole"]?.ToString() == "Instructor") { %>
                         <li class="nav-item"><a class="nav-link" runat="server" href="~/Instructor/Dashboard.aspx"><i class="bi bi-person-video3"></i> Eğitmen Paneli</a></li>
